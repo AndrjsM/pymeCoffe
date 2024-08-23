@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+    <head>
+    </head>
+    <div class="container py-4 mx-auto" th:fragment="listadoAccesorios">Prueba
+        <main>
+            <div class="container py-4 mx-auto">
+                <section class="py-5 text-center container">
+                    <div class="row py-lg-5">
+                        <div class="col-lg-6 col-md-8 mx-auto">
+                            <h1 class="fw-light">Listado de Accesorios</h1>
+                            <p class="lead text-body-secondary">Aquí puedes ver la lista de accesorios disponibles en nuestra tienda.</p>
+                            <p>
+                                <a href="#" class="btn btn-primary my-2">Agregar nuevo accesorio</a>
+                                <a href="#" class="btn btn-secondary my-2">Ver inventario</a>
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="album py-5 bg-body-tertiary">
+                    <div class="container">
+                        <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+                            <!-- Inicio del bucle para cada accesorio -->
+                            <div class="col" th:each="accesorio : ${accesorios}">
+                                <div class="card shadow-sm">
+                                    <img th:src="@{${accesorio.urlImagen}}" class="bd-placeholder-img card-img-top" width="20%" height="225" alt="Imagen del accesorio">
+                                        <div class="card-body">
+                                            <p class="card-text" th:text="${accesorio.nombre}">Nombre del accesorio</p>
+                                            <p class="card-text" th:text="${accesorio.descripcion}">Descripción del accesorio</p>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="btn-group">
+                                                    <a th:href="@{/producto/modificar/}+${accesorio.idAccesorio}" class="btn btn-sm btn-outline-secondary">Agregar al carrito</a>
+                                                </div>
+                                                <small class="text-body-secondary" th:text="'₡' + ${accesorio.precioUnitario}">Precio</small>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+                            <!-- Fin del bucle -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </div>
+
+</main>
