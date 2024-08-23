@@ -39,4 +39,10 @@ public class ProveedorServiceImpl implements ProveedorService{ //clase implement
         proveedorDao.delete(proveedor);
     }
     
+    @Override
+    @Transactional
+    public Proveedor getProveedorById(Long id) {
+        return proveedorDao.findById(id).orElse(null);
+    }
+    
 }

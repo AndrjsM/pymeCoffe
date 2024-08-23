@@ -11,6 +11,8 @@ public interface ProveedorService {
    // Se obtiene un Proveedor, a partir del id de un proveedor
     public Proveedor getProveedor(Proveedor proveedor);
     
+    public Proveedor getProveedorById(Long id);
+    
     // Se inserta un nuevo proveedor si el id del proveedor esta vacío
     // Se actualiza un proveedor si el id del proveedor NO esta vacío
     public void save(Proveedor proveedor);

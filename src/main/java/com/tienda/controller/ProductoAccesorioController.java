@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/springframework/Controller.java to edit this template
- */
 package com.tienda.controller;
 
 import com.tienda.domain.Inventario;
@@ -12,6 +8,7 @@ import com.tienda.service.InventarioService;
 import com.tienda.service.MedidasService;
 import com.tienda.service.ProductoAccesorioService;
 import com.tienda.service.ProveedorService;
+import com.tienda.service.impl.FirebaseStorageServiceImpl;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +17,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 @Controller
 @Slf4j
@@ -34,17 +33,25 @@ public class ProductoAccesorioController {
 
     @Autowired
     private ProveedorService proveedorService;
-    
+
     @Autowired
     private MedidasService medidasService;
+
+    @Autowired
+    private FirebaseStorageServiceImpl firebaseStorageService;
 
     @GetMapping("/listado")
     public String inicio(Model model) {
         List<ProductoAccesorio> accesorios = productoAccesorioService.getProductoAccesorios();
         model.addAttribute("accesorios", accesorios);
-        model.addAttribute("totalAccesorios", accesorios.size());
-        
+
+        // Limitar a los primeros 6 productos
+        /*
+        if (accesorios.size() > 6) {
+            accesorios = accesorios.subList(0, 6);
+        }*/
         List<Medidas> medidas = medidasService.getMedidas();
+        model.addAttribute("medidas", medidas);
 
         List<Inventario> inventarios = inventarioService.getInventarios(true);
         model.addAttribute("inventarios", inventarios);
@@ -54,15 +61,47 @@ public class ProductoAccesorioController {
 
         return "/producto/listado";
     }
-    @GetMapping("/nuevo")
-    public String accesorioNuevo(ProductoAccesorio productoAccesorio) {
-        return "/inventario/modifica";
-    }
 
     @PostMapping("/guardar")
-    public String AccesorioGuardar(ProductoAccesorio productoAccesorio) {
+    public String AccesorioGuardar(ProductoAccesorio productoAccesorio,
+            @RequestParam("imagenFile") MultipartFile imagenFile,
+            @RequestParam("cantidad") int cantidad,
+            @RequestParam("idProveedor") Long idProveedor) {
+
+        // Buscar el proveedor por ID
+        Proveedor proveedor = proveedorService.getProveedorById(idProveedor);
+        if (proveedor == null) {
+            // Manejar el caso donde el proveedor no se encuentra
+            throw new IllegalArgumentException("Proveedor no encontrado");
+        }
+
+        // Crear y guardar el nuevo inventario
+        Inventario nuevoInventario = new Inventario();
+        nuevoInventario.setCantidad(cantidad);
+        nuevoInventario.setEstatus(true); // Asigna el estado por defecto
+        nuevoInventario.setProveedor(proveedor); // Asocia el proveedor al inventario
+        inventarioService.save(nuevoInventario);
+
+        // Asociar el inventario al producto accesorio
+        productoAccesorio.setInventario(nuevoInventario);
+
+        // Guardar el accesorio para generar el ID
         productoAccesorioService.save(productoAccesorio);
-        return "redirect:/inventario/listado";
+
+        // Guardar la imagen si existe
+        if (!imagenFile.isEmpty()) {
+            String imageUrl = firebaseStorageService.cargaImagen(
+                    imagenFile,
+                    "productoAccesorio",
+                    productoAccesorio.getIdAccesorio());
+
+            productoAccesorio.setUrlImagen(imageUrl);
+
+            // Guardar nuevamente el producto accesorio con la URL de la imagen
+            productoAccesorioService.save(productoAccesorio);
+        }
+
+        return "redirect:/producto/listado";
     }
 
     @GetMapping("/eliminar/{idAccesorio}") // revisar solo se puede eliminar si el inventario está en cero
